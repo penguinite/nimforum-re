@@ -6,14 +6,14 @@
 #        All rights reserved.
 #
 import system except Thread
-import
-  os, strutils, times, strtabs, math,
-  jester, asyncdispatch, asyncnet, sequtils,
-  parseutils, random, rst, recaptcha, json, re, sugar,
-  strformat, logging
-  
-import cgi except setCookie
-import std/options
+import std/[os, strutils, times, strtabs,
+            asyncdispatch, sequtils, options,
+            random, json, re, sugar, logging]
+
+#import std/[math, asyncnet, parseutils, strformat]
+
+import std/cgi except setCookie
+import jester, recaptcha, rst
 
 import auth, email, utils, buildcss
 
@@ -26,7 +26,7 @@ else:
 
 import frontend/threadlist except User
 import frontend/[
-  category, postlist, error, header, post, profile, user, karaxutils, search
+  category, postlist, error, header, post, user, karaxutils, search
 ]
 
 from htmlgen import tr, th, td, span, input
