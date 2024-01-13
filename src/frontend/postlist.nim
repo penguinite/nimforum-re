@@ -1,9 +1,5 @@
-
 import system except Thread
-import options, json, times, httpcore, sugar, strutils
-import sequtils
-
-import threadlist, category, post, user
+import threadlist, post
 type
 
   PostList* = ref object
@@ -16,6 +12,8 @@ type
 when defined(js):
   from dom import document
   import jsffi except `&`
+  import std/[options, json, times, httpcore, sugar, strutils, sequtils]
+  import category, user
 
   include karax/prelude
   import karax / [kajax, kdom]

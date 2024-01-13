@@ -13,12 +13,12 @@ type
   CategoryEvent* = proc (category: Category) {.closure.}
   CategoryChangeEvent* = proc (oldCategory: Category, newCategory: Category) {.closure.}
 
-const categoryDescriptionCharLimit = 250
 
 proc cmpNames*(cat1: Category, cat2: Category): int =
   cat1.name.cmp(cat2.name)
 
 when defined(js):
+  const categoryDescriptionCharLimit = 250
   include karax/prelude
   import karax / [vstyles]
   import karaxutils

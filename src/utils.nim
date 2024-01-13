@@ -1,13 +1,12 @@
-import asyncdispatch, smtp, strutils, json, os, rst, rstgen, xmltree, strtabs,
-  htmlparser, streams, parseutils, options, logging
-from times import getTime, utc, format
+import std/[strutils, json, os, xmltree, strtabs, htmlparser, streams, parseutils, logging]
+import rst, rstgen
 
 # Used to be:
 # {'A'..'Z', 'a'..'z', '0'..'9', '_', '\128'..'\255'}
 let
   UsernameIdent* = IdentChars + {'-'} # TODO: Double check that everyone follows this.
 
-import frontend/[karaxutils, error]
+import frontend/[error]
 export parseInt
 
 type
@@ -29,7 +28,7 @@ type
     ga*: string
     port*: int
 
-  ForumError* = object of Exception
+  ForumError* = object of CatchableError
     data*: PostError
 
 proc newForumError*(message: string,

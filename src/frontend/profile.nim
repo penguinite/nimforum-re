@@ -1,8 +1,6 @@
-import options, httpcore, json, sugar, times, strutils
-
-import threadlist, post, error, user
-
 when defined(js):
+  import std/[options, httpcore, json, sugar, times, strutils]
+  import threadlist, post, error, user
   from dom import document
   include karax/prelude
   import karax/[kajax, kdom]

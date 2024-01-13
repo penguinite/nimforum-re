@@ -1,5 +1,3 @@
-import strformat, times, options, json, httpcore, sugar
-
 import category, user
 
 type
@@ -27,6 +25,7 @@ proc isModerated*(thread: Thread): bool =
   thread.author.rank <= Moderated
 
 when defined(js):
+  import std/[strformat, times, options, json, httpcore, sugar]
   import sugar
   include karax/prelude
   import karax / [vstyles, kajax, kdom]

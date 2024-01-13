@@ -1,5 +1,5 @@
 
-import user, options, httpcore, json, times
+import user
 type
   SearchResultKind* = enum
     ThreadMatch, PostMatch
@@ -17,6 +17,7 @@ proc isModerated*(searchResult: SearchResult): bool =
   return searchResult.author.rank <= Moderated
 
 when defined(js):
+  import std/[options, httpcore, json, times]
   from dom import nil
 
   include karax/prelude

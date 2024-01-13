@@ -1,4 +1,4 @@
-import strutils, strformat, parseutils, tables
+import std/[strutils, parseutils]
 
 proc limit*(str: string, n: int): string =
   ## Limit the number of characters in a string. Ends with a elipsis
@@ -18,7 +18,7 @@ proc parseIntSafe*(s: string, value: var int) {.noSideEffect.} =
   ## won't be overwritten.
   try:
     discard parseutils.parseInt(s, value, 0)
-  except OverflowError:
+  except OverflowDefect:
     discard
 
 proc getInt*(s: string, default = 0): int =
@@ -31,12 +31,13 @@ proc getInt64*(s: string, default = 0): int64 =
   result = default
   try:
     discard parseutils.parseBiggestInt(s, result, 0)
-  except OverflowError:
+  except OverflowDefect:
     discard
 
 when defined(js):
   include karax/prelude
   import karax / [kdom, kajax]
+  import std/[strformat, uri, tables]
 
   from dom import nil
 

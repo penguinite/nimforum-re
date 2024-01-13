@@ -1,4 +1,3 @@
-import httpcore
 type
   PostError* = object
     errorFields*: seq[string] ## IDs of the fields with an error.
@@ -7,7 +6,7 @@ type
 when defined(js):
   import json, options
   include karax/prelude
-
+  import httpcore
   import karaxutils
 
   proc render404*(): VNode =
