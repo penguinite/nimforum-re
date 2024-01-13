@@ -1,6 +1,5 @@
-import asyncdispatch, smtp, strutils, times, cgi, tables, logging
-
-from jester import Request, makeUri
+import std/[asyncdispatch, strutils, times, tables, logging, uri]
+import smtp
 
 import utils, auth
 
@@ -113,8 +112,8 @@ type
 
 proc sendSecureEmail*(
   mailer: Mailer,
-  kind: SecureEmailKind, req: Request,
-  name, password, email, salt: string
+  kind: SecureEmailKind,
+  hostname, name, password, email, salt: string
 ) {.async.} =
   let epoch = int(epochTime())
 
@@ -124,15 +123,15 @@ proc sendSecureEmail*(
       "activateEmail"
     of ResetPassword:
       "resetPassword"
-  let url = req.makeUri(
-    "/$#?nick=$#&epoch=$#&ident=$#" %
+  
+  let url = "https://$#/$#?nick=$#&epoch=$#&ident=$#" %
       [
+        hostname,
         path,
         encodeUrl(name),
         encodeUrl($epoch),
         encodeUrl(makeIdentHash(name, password, epoch, salt))
       ]
-  )
 
   debug(url)
 

@@ -122,7 +122,7 @@ proc sendResetPassword(
 
     await sendSecureEmail(
       mailer,
-      ResetPassword, c.req,
+      ResetPassword, c[].config.hostname,
       row[0], row[1], row[2], row[3]
     )
 
@@ -674,7 +674,7 @@ proc executeRegister(c: TForumData, name, pass, antibot, userIp,
   # Send activation email.
   {.cast(gcsafe).}:
     await sendSecureEmail(
-      mailer, ActivateEmail, c.req, name, password, email, salt
+      mailer, ActivateEmail, c[].config.hostname, name, password, email, salt
     )
 
   # Add account to person table
@@ -808,7 +808,7 @@ proc updateProfile(
     
     {.cast(gcsafe).}:
       await sendSecureEmail(
-        mailer, ActivateEmail, c.req, row[0], row[1], email, row[3]
+        mailer, ActivateEmail, c[].config.hostname, row[0], row[1], email, row[3]
       )
 
   validateEmail(email, checkDuplicated=wasEmailChanged)
