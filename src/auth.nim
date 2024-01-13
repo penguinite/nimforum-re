@@ -1,5 +1,4 @@
-import std/[sysrand]
-import random
+import std/[sysrand, base64]
 
 when NimMajor >= 2:
   import checksums/md5
@@ -8,49 +7,31 @@ else:
 
 import bcrypt, hmac
 
-proc randomSalt(): string =
-  result = ""
-  for i in 0..127:
-    var r = rand(225)
-    if r >= 32 and r <= 126:
-      result.add(chr(rand(225)))
+proc genSalt(length: int): string =
+  ## Wraps sysrand's urandom func.
+  for bite in urandom(length):
+    result.add $(bite)
+  return result
 
-proc devRandomSalt(): string =
-  when defined(posix):
-    result = ""
-    var f = open("/dev/urandom")
-    var randomBytes: array[0..127, char]
-    discard f.readBuffer(addr(randomBytes), 128)
-    for i in 0..127:
-      if ord(randomBytes[i]) >= 32 and ord(randomBytes[i]) <= 126:
-        result.add(randomBytes[i])
-    f.close()
-  else:
-    result = randomSalt()
-
-proc makeSalt*(): string =
+proc makeSalt*(length: int = 128): string =
   ## Creates a salt using a cryptographically secure random number generator.
   ##
   ## Ensures that the resulting salt contains no ``\0``.
-  try:
-    result = devRandomSalt()
-  except IOError:
-    result = randomSalt()
+  var tmp = auth.genSalt(length)
 
-  var newResult = ""
-  for i in 0 ..< result.len:
-    if result[i] != '\0':
-      newResult.add result[i]
-  return newResult
+  for i in 0 ..< tmp.len:
+    if tmp[i] != '\0':
+      result.add tmp[i]
+  return result
 
 proc makeSessionKey*(): string =
   ## Creates a random key to be used to authorize a session.
   let random = makeSalt()
-  return bcrypt.hash(random, genSalt(8))
+  return bcrypt.hash(random, bcrypt.genSalt(8))
 
 proc makePassword*(password, salt: string, comparingTo = ""): string =
   ## Creates an bcrypt hash by combining password and salt.
-  let bcryptSalt = if comparingTo != "": comparingTo else: genSalt(8)
+  let bcryptSalt = if comparingTo != "": comparingTo else: bcrypt.genSalt(8)
   result = hash(salt & password, bcryptSalt)
 
 proc makeIdentHash*(user, password: string, epoch: int64,
