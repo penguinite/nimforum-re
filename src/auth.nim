@@ -1,3 +1,4 @@
+import std/[sysrand]
 import random
 
 when NimMajor >= 2:
@@ -48,9 +49,9 @@ proc makeSessionKey*(): string =
   return bcrypt.hash(random, genSalt(8))
 
 proc makePassword*(password, salt: string, comparingTo = ""): string =
-  ## Creates an MD5 hash by combining password and salt.
+  ## Creates an bcrypt hash by combining password and salt.
   let bcryptSalt = if comparingTo != "": comparingTo else: genSalt(8)
-  result = hash(getMD5(salt & getMD5(password)), bcryptSalt)
+  result = hash(salt & password, bcryptSalt)
 
 proc makeIdentHash*(user, password: string, epoch: int64,
                     secret: string): string =
