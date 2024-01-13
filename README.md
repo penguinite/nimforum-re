@@ -1,20 +1,26 @@
 # nimforum
 
+*Note:* This is a heavily-modified fork of nimforum that I use like a personal sandbox for improving nimforum. I might make a PR to send back some improvements, but not all of them.
+
 NimForum is a light-weight forum implementation
 with many similarities to Discourse. It is implemented in
 the [Nim](https://nim-lang.org) programming
 language and uses SQLite for its database.
 
+## Differences to vanilla nimforum
+
+1. This uses an INI-style configuration format provided by [iniplus](https://github.com/penguinite/iniplus.git)
+2. This has a **lot** less warnings when building.
+3. This tries to use the latest dependencies whenever available.
+
 ## Examples in the wild
 
-[![forum.nim-lang.org](https://i.imgur.com/hdIF5Az.png)](https://forum.nim-lang.org)
-
-<p align="center" margin="0"><a href="https://forum.nim-lang.org"><b>forum.nim-lang.org</b></a></p>
+None, but if you're looking for examples of vanilla nimforum in the wild then there's only one! [nim-lang forum!](https://forum.nim-lang.org)
 
 ## Features
 
 * Efficient, type safe and clean **single-page application** developed using the
-  [Karax](https://github.com/pragmagic/karax) and
+  [Karax](https://github.com/karaxnim/karax) and
   [Jester](https://github.com/dom96/jester) frameworks.
 * **Utilizes SQLite** making set up much easier.
 * Endlessly **customizable** using SASS.
@@ -66,7 +72,7 @@ fasttest             Runs tester without recompiling backend
 To get up and running:
 
 ```bash
-git clone https://github.com/nim-lang/nimforum
+git clone https://github.com/penguinite/nimforum
 cd nimforum
 git submodule update --init --recursive
 
