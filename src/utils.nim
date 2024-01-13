@@ -109,45 +109,6 @@ proc processGT(n: XmlNode, tag: string): (int, XmlNode, string) =
     else:
       result[1].add(c)
 
-proc blockquoteFinish(currentBlockquote, newNode: var XmlNode, n: XmlNode) =
-  if currentBlockquote.len > 0:
-    #echo(currentBlockquote.repr)
-    newNode.add(currentBlockquote)
-    currentBlockquote = newElement("blockquote")
-  newNode.add(n)
-
-proc processQuotes(node: XmlNode): XmlNode =
-  # Bolt on quotes.
-  # TODO: Yes, this is ugly. I wrote it quickly. PRs welcome ;)
-  result = newElement("div")
-  var currentBlockquote = newElement("blockquote")
-  for n in items(node):
-    case n.kind
-    of xnElement:
-      case n.tag
-      of "p":
-        let (nesting, contentNode, _) = processGT(n, "p")
-        if nesting > 0:
-          var bq = currentBlockquote
-          for i in 1 ..< nesting:
-            var newBq = bq.child("blockquote")
-            if newBq.isNil:
-              newBq = newElement("blockquote")
-              bq.add(newBq)
-            bq = newBq
-          bq.add(contentNode)
-        else:
-          blockquoteFinish(currentBlockquote, result, n)
-      else:
-        blockquoteFinish(currentBlockquote, result, n)
-    of xnText:
-      if n.text[0] == '\10':
-        result.add(n)
-      else:
-        blockquoteFinish(currentBlockquote, result, n)
-    else:
-      blockquoteFinish(currentBlockquote, result, n)
-
 proc replaceMentions(node: XmlNode): seq[XmlNode] =
   assert node.kind == xnText
   result = @[]
