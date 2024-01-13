@@ -7,7 +7,7 @@
 #
 # Script to initialise the nimforum.
 
-import strutils, os, times, json, options, terminal
+import strutils, os, times, options, terminal, iniplus
 
 when NimMajor > 1:
   import db_connector/db_sqlite
@@ -237,6 +237,28 @@ proc initialiseDb(admin: tuple[username, password, email: string],
 
   close(db)
 
+# This should probably be implemented in iniplus.
+# Meh, ill do it later.
+type
+  CondensedConfigValue = object
+    section: string
+    key: string
+    value*: ConfigValue
+
+proc condense(section,key: string, value: bool): CondensedConfigValue =
+  result.section = section
+  result.key = key
+  result.value = newValue(value)
+
+proc condense(section,key: string, value: string): CondensedConfigValue =
+  result.section = section
+  result.key = key
+  result.value = newValue(value)
+
+proc setBulkKeys(table: var ConfigTable, vals: varargs[CondensedConfigValue]) =
+  for val in vals:
+    table.setKey(val.section, val.key, val.value)
+
 proc initialiseConfig(
   name, title, hostname: string,
   recaptcha: tuple[siteKey, secretKey: string],
@@ -245,27 +267,33 @@ proc initialiseConfig(
   dbPath: string,
   ga: string=""
 ) =
-  let path = getCurrentDir() / "forum.json"
+  let path = getCurrentDir() / "forum.ini"
 
-  var j = %{
-    "name": %name,
-    "title": %title,
-    "hostname": %hostname,
-    "recaptchaSiteKey": %recaptcha.siteKey,
-    "recaptchaSecretKey": %recaptcha.secretKey,
-    "smtpAddress": %smtp.address,
-    "smtpUser": %smtp.user,
-    "smtpPassword": %smtp.password,
-    "smtpFromAddr": %smtp.fromAddr,
-    "smtpTls": %smtp.tls,
-    "isDev": %isDev,
-    "dbPath": %dbPath
-  }
+  var table = newConfigTable()
+
+  # Still quite ugly. We need a load of `condense` everywhere.
+  # Ill redo this once I learn macros. But hey! We don't need % anymore!
+  # And we don't need JSON too!
+  table.setBulkKeys(
+    condense("", "isDev", isDev),
+    condense("", "dbPath", dbPath),
+    condense("web", "name", name),
+    condense("web", "title", title),
+    condense("web", "hostname", hostname),
+    condense("captcha", "siteKey", recaptcha.siteKey),
+    condense("captcha", "secretKey", recaptcha.secretKey),
+    condense("smtp", "address", smtp.address),
+    condense("smtp", "user", smtp.user),
+    condense("smtp", "password", smtp.password),
+    condense("smtp", "fromAddr", smtp.fromAddr),
+    condense("smtp", "tls", smtp.tls)
+  )
+
   if ga.len > 0:
-    j["ga"] = %ga
+    table.setKey("web","ga", newValue(ga))
 
-  backup(path, some(pretty(j)))
-  writeFile(path, pretty(j))
+  backup(path, some(toString(table)))
+  writeFile(path, toString(table))
 
 proc question(q: string): string =
   while result.len == 0:
@@ -275,7 +303,7 @@ proc question(q: string): string =
 proc setup() =
   echo("""
 Welcome to the NimForum setup script. Please answer the following questions.
-These can be changed later in the generated forum.json file.
+These can be changed later in the generated forum.ini file.
   """)
 
   let name = question("Forum full name: ")

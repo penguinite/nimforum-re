@@ -50,7 +50,7 @@ just specify dummy values if you want to play around with the forum as
 quickly as possible and set these up later.
 
 This program will create a ``nimforum.db`` file, this contains your forum's
-database. It will also create a ``forum.json`` file, you can modify this
+database. It will also create a ``forum.ini`` file, you can modify this
 file after running the ``setup_nimforum`` script if you've made any mistakes
 or just want to change things.
 
@@ -63,7 +63,7 @@ Executing the forum is simple, just run the ``forum`` binary:
 ```
 
 The forum will start listening to HTTP requests on port 5000 (by default, this
-can be changed in ``forum.json``).
+can be changed in ``forum.ini``).
 
 On your server you should set up a separate HTTP server. The recommended choice
 is nginx. You can then use it as a reverse proxy for NimForum.

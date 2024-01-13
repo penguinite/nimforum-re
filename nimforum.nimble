@@ -22,6 +22,8 @@ requires "sass"
 
 requires "karax"
 
+requires "iniplus"
+switch("d","nimOldCaseObjects")
 
 requires "webdriver"
 

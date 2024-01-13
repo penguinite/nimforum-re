@@ -1,5 +1,6 @@
-import std/[strutils, json, os, xmltree, strtabs, htmlparser, streams, parseutils, logging]
+import std/[strutils, os, xmltree, strtabs, htmlparser, streams, parseutils, logging]
 import rst, rstgen
+import iniplus
 
 # Used to be:
 # {'A'..'Z', 'a'..'z', '0'..'9', '_', '\128'..'\255'}
@@ -47,27 +48,49 @@ docConfig = rstgen.defaultConfig()
 docConfig["doc.listing_start"] = "<pre class='code' data-lang='$2'><code>"
 docConfig["doc.listing_end"] = "</code><div class='code-buttons'><button class='btn btn-primary btn-sm'>Run</button></div></pre>"
 
-proc loadConfig*(filename = getCurrentDir() / "forum.json"): Config =
+proc loadConfig*(filename = getCurrentDir() / "forum.ini"): Config =
   result = Config(smtpAddress: "", smtpPort: 25, smtpUser: "",
                   smtpPassword: "", mlistAddress: "")
-  let root = parseFile(filename)
-  result.smtpAddress = root{"smtpAddress"}.getStr("")
-  result.smtpPort = root{"smtpPort"}.getInt(25)
-  result.smtpUser = root{"smtpUser"}.getStr("")
-  result.smtpPassword = root{"smtpPassword"}.getStr("")
-  result.smtpFromAddr = root{"smtpFromAddr"}.getStr("")
-  result.smtpTls = root{"smtpTls"}.getBool(false)
-  result.smtpSsl = root{"smtpSsl"}.getBool(false)
-  result.mlistAddress = root{"mlistAddress"}.getStr("")
-  result.recaptchaSecretKey = root{"recaptchaSecretKey"}.getStr("")
-  result.recaptchaSiteKey = root{"recaptchaSiteKey"}.getStr("")
-  result.isDev = root{"isDev"}.getBool()
-  result.dbPath = root{"dbPath"}.getStr("nimforum.db")
-  result.hostname = root["hostname"].getStr()
-  result.name = root["name"].getStr()
-  result.title = root["title"].getStr()
-  result.ga = root{"ga"}.getStr()
-  result.port = root{"port"}.getInt(5000)
+  
+  let config = parseFile(filename)
+  
+  result.smtpAddress = config.getStringOrDefault("smtp","address","")
+  
+  result.smtpPort = 25
+  if config.exists("smtp", "port"):
+    result.smtpPort = config.getInt("smtp","port")
+
+  result.smtpUser = config.getStringOrDefault("smtp","user","")
+  result.smtpPassword = config.getStringOrDefault("smtp","password","")
+  result.smtpFromAddr = config.getStringOrDefault("smtp","fromAddr","")
+
+  result.smtpTls = false
+  if config.exists("smtp","tls"):
+    result.smtpTls = config.getBool("smtp","tls")
+  
+  result.smtpSsl = false
+  if config.exists("smtp","ssl"):
+    result.smtpSsl = config.getBool("smtp","ssl")
+    
+  result.mlistAddress = config.getStringOrDefault("smtp","listAddress","")
+  result.recaptchaSecretKey = config.getStringOrDefault("captcha","secretKey","")
+  result.recaptchaSiteKey = config.getStringOrDefault("captcha","siteKey","")
+
+  result.isDev = false
+  if config.exists("","isDev"):
+    result.isDev = config.getBool("","isDev")
+
+  result.dbPath = config.getStringOrDefault("","dbPath","nimforum.db")
+  result.hostname = config.getStringOrDefault("web","hostname","")
+  result.name = config.getStringOrDefault("web","name","")
+  result.title = config.getStringOrDefault("web","title","")
+  result.ga = config.getStringOrDefault("web","ga","")
+
+  result.port = 5000
+  if config.exists("web","port"):
+    result.port = config.getInt("web","port")
+  
+  return result
 
 proc processGT(n: XmlNode, tag: string): (int, XmlNode, string) =
   result = (0, newElement(tag), tag)
