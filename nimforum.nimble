@@ -20,13 +20,14 @@ requires "hmac#9c61ebe2fd134cf97"
 requires "recaptcha#d06488e"
 requires "sass#649e0701fa5c"
 
-requires "karax#45bac6b"
+requires "checksums"
 
 requires "webdriver#c5e4182"
 
 when NimMajor > 1:
   requires "db_connector >= 0.1.0"
   requires "smtp >= 0.1.0"
+  requires "checksums"
 
 # Tasks
 

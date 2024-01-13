@@ -1,4 +1,9 @@
-import random, md5
+import random
+
+when NimMajor >= 2:
+  import checksums/md5
+else:
+  import md5
 
 import bcrypt, hmac
 
