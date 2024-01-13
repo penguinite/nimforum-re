@@ -32,17 +32,17 @@ when NimMajor > 1:
 # Tasks
 
 task backend, "Compiles and runs the forum backend":
-  exec "nimble c --mm:refc src/forum.nim"
+  exec "nimble c src/forum.nim"
   exec "./src/forum"
 
 task runbackend, "Runs the forum backend":
   exec "./src/forum"
 
 task testbackend, "Runs the forum backend in test mode":
-  exec "nimble c -r --mm:refc -d:skipRateLimitCheck src/forum.nim"
+  exec "nimble c -r -d:skipRateLimitCheck src/forum.nim"
 
 task frontend, "Builds the necessary JS frontend (with CSS)":
-  exec "nimble c -r --mm:refc src/buildcss"
+  exec "nimble c -r src/buildcss"
   exec "nimble js -d:release src/frontend/forum.nim"
   mkDir "public/js"
   cpFile "src/frontend/forum.js", "public/js/forum.js"
