@@ -14,15 +14,16 @@ skipExt = @["nim"]
 
 requires "nim >= 1.0.6"
 requires "httpbeast >= 0.4.0"
-requires "jester#405be2e"
-requires "bcrypt#440c5676ff6"
-requires "hmac#9c61ebe2fd134cf97"
-requires "recaptcha#d06488e"
-requires "sass#649e0701fa5c"
+requires "jester"
+requires "bcrypt"
+requires "hmac"
+requires "recaptcha"
+requires "sass"
 
-requires "checksums"
+requires "karax"
 
-requires "webdriver#c5e4182"
+
+requires "webdriver"
 
 when NimMajor > 1:
   requires "db_connector >= 0.1.0"
