@@ -1,6 +1,6 @@
 # nimforum
 
-*Note:* This is a heavily-modified fork of nimforum that I use like a personal sandbox for improving nimforum. I might make a PR to send back some improvements, but not all of them.
+*Note:* This is a heavily-modified fork of nimforum that I use like a personal sandbox for improving nimforum. I might make a PR to send back some improvements, but I don't think every commit will be accepted upstream.
 
 NimForum is a light-weight forum implementation
 with many similarities to Discourse. It is implemented in
