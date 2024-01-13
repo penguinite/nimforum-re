@@ -21,3 +21,5 @@ buildcss
 nimforum.css
 
 /src/frontend/forum.js
+
+public/
