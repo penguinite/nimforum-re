@@ -1,4 +1,4 @@
-import std/[sysrand, base64]
+import std/[sysrand]
 
 when NimMajor >= 2:
   import checksums/md5
