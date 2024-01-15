@@ -23,11 +23,7 @@ requires "sass"
 requires "karax"
 
 requires "iniplus >= 0.2.0"
-switch("d","nimOldCaseObjects")
-
 requires "webdriver"
-
-when NimMajor > 1:
   requires "db_connector >= 0.1.0"
   requires "smtp >= 0.1.0"
   requires "checksums"
