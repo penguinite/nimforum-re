@@ -237,28 +237,6 @@ proc initialiseDb(admin: tuple[username, password, email: string],
 
   close(db)
 
-# This should probably be implemented in iniplus.
-# Meh, ill do it later.
-type
-  CondensedConfigValue = object
-    section: string
-    key: string
-    value*: ConfigValue
-
-proc condense(section,key: string, value: bool): CondensedConfigValue =
-  result.section = section
-  result.key = key
-  result.value = newValue(value)
-
-proc condense(section,key: string, value: string): CondensedConfigValue =
-  result.section = section
-  result.key = key
-  result.value = newValue(value)
-
-proc setBulkKeys(table: var ConfigTable, vals: varargs[CondensedConfigValue]) =
-  for val in vals:
-    table.setKey(val.section, val.key, val.value)
-
 proc initialiseConfig(
   name, title, hostname: string,
   recaptcha: tuple[siteKey, secretKey: string],
@@ -275,18 +253,18 @@ proc initialiseConfig(
   # Ill redo this once I learn macros. But hey! We don't need % anymore!
   # And we don't need JSON too!
   table.setBulkKeys(
-    condense("", "isDev", isDev),
-    condense("", "dbPath", dbPath),
-    condense("web", "name", name),
-    condense("web", "title", title),
-    condense("web", "hostname", hostname),
-    condense("captcha", "siteKey", recaptcha.siteKey),
-    condense("captcha", "secretKey", recaptcha.secretKey),
-    condense("smtp", "address", smtp.address),
-    condense("smtp", "user", smtp.user),
-    condense("smtp", "password", smtp.password),
-    condense("smtp", "fromAddr", smtp.fromAddr),
-    condense("smtp", "tls", smtp.tls)
+    c("", "isDev", isDev),
+    c("", "dbPath", dbPath),
+    c("web", "name", name),
+    c("web", "title", title),
+    c("web", "hostname", hostname),
+    c("captcha", "siteKey", recaptcha.siteKey),
+    c("captcha", "secretKey", recaptcha.secretKey),
+    c("smtp", "address", smtp.address),
+    c("smtp", "user", smtp.user),
+    c("smtp", "password", smtp.password),
+    c("smtp", "fromAddr", smtp.fromAddr),
+    c("smtp", "tls", smtp.tls)
   )
 
   if ga.len > 0:
