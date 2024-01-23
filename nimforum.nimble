@@ -40,15 +40,6 @@ task runbackend, "Runs the forum backend":
 task testbackend, "Runs the forum backend in test mode":
   exec "nimble c -r -d:skipRateLimitCheck src/forum.nim"
 
-task frontend, "Builds the necessary JS frontend (with CSS)":
-  exec "nimble c -r src/buildcss"
-  exec "nimble js -d:release src/frontend/forum.nim"
-  mkDir "public/js"
-  cpFile "src/frontend/forum.js", "public/js/forum.js"
-
-task minify, "Minifies the JS using Google's closure compiler":
-  exec "closure-compiler public/js/forum.js --js_output_file public/js/forum.js.opt"
-
 task testdb, "Creates a test DB (with admin account!)":
   exec "nimble c src/setup_nimforum"
   exec "./src/setup_nimforum --test"
