@@ -13,26 +13,16 @@ import std/[os, strutils, times, strtabs,
 #import std/[math, asyncnet, parseutils, strformat]
 
 import std/cgi except setCookie
-import jester, recaptcha, rst
+import recaptcha, rst
 
 import auth, email, utils, buildcss
 
-when NimMajor > 1:
-  import db_connector/db_sqlite
-  import checksums/md5
-else:
-  import std/db_sqlite
-  import md5
+import db_connector/db_sqlite
+import checksums/md5
 
-import frontend/threadlist except User
-import frontend/[
-  category, postlist, error, header, post, user, karaxutils, search
-]
+import core/[categories, database, configs]
 
 from htmlgen import tr, th, td, span, input
-
-when not declared(roSandboxDisabled):
-  {.error: "Your Nim version is vulnerable to a CVE. Upgrade it.".}
 
 type
   TCrud = enum crCreate, crRead, crUpdate, crDelete
@@ -48,12 +38,24 @@ type
     config: Config
 
 var
-  db: DbConn
+  db{.threadvar.}: DbConn
+  config{.threadvar.}: Config
   isFTSAvailable: bool
-  config: Config
   captcha: ReCaptcha
   mailer: Mailer
-  karaxHtml: string
+
+config = init()
+mailer = newMailer(config)
+
+db = init()
+isFTSAvailable = db.getAllRows(sql("SELECT name FROM sqlite_master WHERE " &
+    "type='table' AND name='post_fts'")).len == 1
+
+proc init() =
+  if db.isNil(): db.init()
+  if config.isNil(): config.init()
+  if len(config.recaptchaSecretKey) > 0 and len(config.recaptchaSiteKey) > 0:
+    captcha = initReCaptcha(config.recaptchaSecretKey, config.recaptchaSiteKey)
 
 proc init(c: TForumData) =
   c.userPass = ""
@@ -256,32 +258,7 @@ proc verifyIdentHash(
   if newIdent != ident:
     raise newForumError("Invalid ident hash")
 
-proc initialise() =
-  randomize()
 
-  config = loadConfig()
-  if len(config.recaptchaSecretKey) > 0 and len(config.recaptchaSiteKey) > 0:
-    captcha = initReCaptcha(config.recaptchaSecretKey, config.recaptchaSiteKey)
-  else:
-    doAssert config.isDev, "Recaptcha required for production!"
-    warn("No recaptcha secret key specified.")
-
-  mailer = newMailer(config)
-
-  db = open(connection=config.dbPath, user="", password="",
-              database="nimforum")
-  isFTSAvailable = db.getAllRows(sql("SELECT name FROM sqlite_master WHERE " &
-      "type='table' AND name='post_fts'")).len == 1
-
-  buildCSS(config)
-
-  # Read karax.html and set its properties.
-  karaxHtml = readFile("public/karax.html") %
-    {
-      "title": config.title,
-      "timestamp": encodeUrl(CompileDate & CompileTime),
-      "ga": config.ga
-    }.newStringTable()
 
 
 template createTFD() =
@@ -830,22 +807,9 @@ routes:
 
   get "/categories.json":
     # TODO: Limit this query in the case of many many categories
-    const categoriesQuery =
-      sql"""
-        select c.*, count(thread.category)
-        from category c
-        left join thread on c.id == thread.category
-        group by c.id;
-      """
+    
 
-    var list = CategoryList(categories: @[])
-    for data in getAllRows(db, categoriesQuery):
-      let category = Category(
-        id: data[0].getInt, name: data[1], description: data[2], color: data[3], numTopics: data[4].parseInt
-      )
-      list.categories.add(category)
-
-    resp $(%list), "application/json"
+    resp $(%getCategories()), "application/json"
 
   get "/threads.json":
     var

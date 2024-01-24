@@ -48,50 +48,6 @@ docConfig = rstgen.defaultConfig()
 docConfig["doc.listing_start"] = "<pre class='code' data-lang='$2'><code>"
 docConfig["doc.listing_end"] = "</code><div class='code-buttons'><button class='btn btn-primary btn-sm'>Run</button></div></pre>"
 
-proc loadConfig*(filename = getCurrentDir() / "forum.ini"): Config =
-  result = Config(smtpAddress: "", smtpPort: 25, smtpUser: "",
-                  smtpPassword: "", mlistAddress: "")
-  
-  let config = parseFile(filename)
-  
-  result.smtpAddress = config.getStringOrDefault("smtp","address","")
-  
-  result.smtpPort = 25
-  if config.exists("smtp", "port"):
-    result.smtpPort = config.getInt("smtp","port")
-
-  result.smtpUser = config.getStringOrDefault("smtp","user","")
-  result.smtpPassword = config.getStringOrDefault("smtp","password","")
-  result.smtpFromAddr = config.getStringOrDefault("smtp","fromAddr","")
-
-  result.smtpTls = false
-  if config.exists("smtp","tls"):
-    result.smtpTls = config.getBool("smtp","tls")
-  
-  result.smtpSsl = false
-  if config.exists("smtp","ssl"):
-    result.smtpSsl = config.getBool("smtp","ssl")
-    
-  result.mlistAddress = config.getStringOrDefault("smtp","listAddress","")
-  result.recaptchaSecretKey = config.getStringOrDefault("captcha","secretKey","")
-  result.recaptchaSiteKey = config.getStringOrDefault("captcha","siteKey","")
-
-  result.isDev = false
-  if config.exists("","isDev"):
-    result.isDev = config.getBool("","isDev")
-
-  result.dbPath = config.getStringOrDefault("","dbPath","nimforum.db")
-  result.hostname = config.getStringOrDefault("web","hostname","")
-  result.name = config.getStringOrDefault("web","name","")
-  result.title = config.getStringOrDefault("web","title","")
-  result.ga = config.getStringOrDefault("web","ga","")
-
-  result.port = 5000
-  if config.exists("web","port"):
-    result.port = config.getInt("web","port")
-  
-  return result
-
 proc processGT(n: XmlNode, tag: string): (int, XmlNode, string) =
   result = (0, newElement(tag), tag)
   if n.kind == xnElement and len(n) == 1 and n[0].kind == xnElement:

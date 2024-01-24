@@ -3,9 +3,7 @@ version       = "2.3.0"
 author        = "Dominik Picheta"
 description   = "The Nim forum"
 license       = "MIT"
-
 srcDir = "src"
-
 bin = @["forum"]
 
 skipExt = @["nim"]
@@ -14,27 +12,21 @@ skipExt = @["nim"]
 
 requires "nim >= 1.0.6"
 requires "httpbeast >= 0.4.0"
-requires "jester"
 requires "bcrypt"
 requires "hmac"
 requires "recaptcha"
 requires "sass"
 
-requires "karax"
+requires "happyx"
 
 requires "iniplus >= 0.2.0"
 requires "webdriver"
-  requires "db_connector >= 0.1.0"
-  requires "smtp >= 0.1.0"
-  requires "checksums"
+requires "db_connector >= 0.1.0"
+requires "smtp >= 0.1.0"
+requires "checksums"
 
 # Tasks
-
-task backend, "Compiles and runs the forum backend":
-  exec "nimble c src/forum.nim"
-  exec "./src/forum"
-
-task runbackend, "Runs the forum backend":
+task run, "Runs the forum backend":
   exec "./src/forum"
 
 task testbackend, "Runs the forum backend in test mode":
