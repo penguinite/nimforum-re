@@ -1,20 +1,22 @@
 import std/[asyncdispatch, strutils, times, tables, logging, uri]
 import smtp
 
-import utils, auth
+import configs, auth
 
 type
   Mailer* = ref object
-    config: Config
+    loaded: bool
     lastReset: Time
     emailsSent: CountTable[string]
 
 proc newMailer*(config: Config): Mailer =
   Mailer(
-    config: config,
+    loaded: true,
     lastReset: getTime(),
     emailsSent: initCountTable[string]()
   )
+
+proc isNil*(m: Mailer): bool = return not m.loaded
 
 proc rateCheck(mailer: Mailer, address: string): bool =
   ## Returns true if we've emailed the address too much.
@@ -26,7 +28,8 @@ proc rateCheck(mailer: Mailer, address: string): bool =
   result = address in mailer.emailsSent and mailer.emailsSent[address] >= 2
   mailer.emailsSent.inc(address)
 
-proc sendMail(
+proc sendMail*(
+  config: Config,
   mailer: Mailer,
   subject, message, recipient: string,
   otherHeaders:seq[(string, string)] = @[]
@@ -36,10 +39,10 @@ proc sendMail(
     let msg = "Too many messages have been sent to this email address recently."
     raise newForumError(msg)
 
-  if mailer.config.smtpAddress.len == 0:
+  if config.smtpAddress.len == 0:
     warn("Cannot send mail: no smtp server configured (smtpAddress).")
     return
-  if mailer.config.smtpFromAddr.len == 0:
+  if config.smtpFromAddr.len == 0:
     warn("Cannot send mail: no smtp from address configured (smtpFromAddr).")
     return
 
