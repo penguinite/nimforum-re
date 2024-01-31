@@ -15,56 +15,31 @@ import std/[os, strutils, times, strtabs,
 import std/cgi except setCookie
 import recaptcha, rst
 
-import auth, email, utils, buildcss
+import auth, utils, buildcss
 
 import db_connector/db_sqlite
 import checksums/md5
 
-import core/[categories, database, configs]
+import core/[categories, database, configs, user, avatar, captchawrap, email]
 
 from htmlgen import tr, th, td, span, input
-
-type
-  TCrud = enum crCreate, crRead, crUpdate, crDelete
-
-  Session = object of RootObj
-    userName, userPass, email: string
-    rank: Rank
-    previousVisitAt: int64
-
-  TForumData = ref object of Session
-    req: Request
-    userid: string
-    config: Config
 
 var
   db{.threadvar.}: DbConn
   config{.threadvar.}: Config
-  isFTSAvailable: bool
-  captcha: ReCaptcha
-  mailer: Mailer
+  mailer{.threadvar.}: Mailer
+  captcha{.threadvar.}: Captcha
 
-config = init()
-mailer = newMailer(config)
-
-db = init()
-isFTSAvailable = db.getAllRows(sql("SELECT name FROM sqlite_master WHERE " &
-    "type='table' AND name='post_fts'")).len == 1
+let isFTSAvailable: bool = db.getAllRows(sql("SELECT name FROM sqlite_master WHERE " & "type='table' AND name='post_fts'")).len == 1
 
 proc init() =
-  if db.isNil(): db.init()
-  if config.isNil(): config.init()
-  if len(config.recaptchaSecretKey) > 0 and len(config.recaptchaSiteKey) > 0:
-    captcha = initReCaptcha(config.recaptchaSecretKey, config.recaptchaSiteKey)
+  ## Reloads every thread-local variable
+  if config.isNil(): config = configs.init()
+  if db.isNil(): db = database.init(config)
+  if captcha.isNil() and config.hasCaptchaKeys(): captcha = captchawrap.init(config)
+  if mailer.isNil(): mailer = newMailer(config)
 
-proc init(c: TForumData) =
-  c.userPass = ""
-  c.userName = ""
-
-  c.userid = ""
-
-proc loggedIn(c: TForumData): bool =
-  result = c.userName.len > 0
+init() # Run at least once on startup.
 
 # --------------- HTML widgets ------------------------------------------------
 
@@ -79,27 +54,6 @@ proc genThreadUrl(c: TForumData, postId = "", action = "",
   elif postId != "":
     result.add("#" & postId)
   result = c.req.makeUri(result, absolute = false)
-
-
-proc getGravatarUrl(email: string, size = 80): string =
-  let emailMD5 = email.toLowerAscii.toMD5
-  return ("https://www.gravatar.com/avatar/" & $emailMD5 & "?s=" & $size &
-     "&d=identicon")
-
-
-
-# -----------------------------------------------------------------------------
-
-proc validateCaptcha(recaptchaResp, ip: string) {.async, gcsafe.} =
-  # captcha validation:
-  {.cast(gcsafe).}:
-    if config.recaptchaSecretKey.len > 0:
-      var verifyFut = captcha.verify(recaptchaResp, ip)
-      yield verifyFut
-      if verifyFut.failed:
-        raise newForumError(
-          "Invalid recaptcha answer", @[]
-        )
 
 proc sendResetPassword(
   c: TForumData,
@@ -193,34 +147,6 @@ proc validateRst(c: TForumData, content: string): bool {.gcsafe.}=
     discard rstToHtml(content)
   except EParseError:
     result = false
-
-proc crud(c: TCrud, table: string, data: varargs[string]): SqlQuery =
-  case c
-  of crCreate:
-    var fields = "insert into " & table & "("
-    var vals = ""
-    for i, d in data:
-      if i > 0:
-        fields.add(", ")
-        vals.add(", ")
-      fields.add(d)
-      vals.add('?')
-    result = sql(fields & ") values (" & vals & ")")
-  of crRead:
-    var res = "select "
-    for i, d in data:
-      if i > 0: res.add(", ")
-      res.add(d)
-    result = sql(res & " from " & table)
-  of crUpdate:
-    var res = "update " & table & " set "
-    for i, d in data:
-      if i > 0: res.add(", ")
-      res.add(d)
-      res.add(" = ?")
-    result = sql(res & " where id = ?")
-  of crDelete:
-    result = sql("delete from " & table & " where id = ?")
 
 proc rateLimitCheck(c: TForumData): bool =
   const query40 =
