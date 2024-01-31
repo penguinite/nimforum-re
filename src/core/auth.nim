@@ -1,10 +1,4 @@
 import std/[sysrand]
-
-when NimMajor >= 2:
-  import checksums/md5
-else:
-  import md5
-
 import bcrypt, hmac
 
 proc genSalt(length: int): string =
@@ -32,7 +26,7 @@ proc makeSessionKey*(): string =
 proc makePassword*(password, salt: string, comparingTo = ""): string =
   ## Creates an bcrypt hash by combining password and salt.
   let bcryptSalt = if comparingTo != "": comparingTo else: bcrypt.genSalt(8)
-  result = hash(salt & password, bcryptSalt)
+  result = bcrypt.hash(salt & password, bcryptSalt)
 
 proc makeIdentHash*(user, password: string, epoch: int64,
                     secret: string): string =
