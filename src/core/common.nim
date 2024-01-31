@@ -1,42 +1,24 @@
-import std/[strutils, os, xmltree, strtabs, htmlparser, streams, parseutils, logging]
+import std/[strutils, xmltree, strtabs, htmlparser, streams, parseutils, logging]
 import rst, rstgen
-import iniplus
 
 # Used to be:
 # {'A'..'Z', 'a'..'z', '0'..'9', '_', '\128'..'\255'}
 let
   UsernameIdent* = IdentChars + {'-'} # TODO: Double check that everyone follows this.
 
-import frontend/[error]
 export parseInt
 
 type
-  Config* = object
-    smtpAddress*: string
-    smtpPort*: int
-    smtpUser*: string
-    smtpPassword*: string
-    smtpFromAddr*: string
-    smtpTls*: bool
-    smtpSsl*: bool
-    mlistAddress*: string
-    recaptchaSecretKey*: string
-    recaptchaSiteKey*: string
-    isDev*: bool
-    dbPath*: string
-    hostname*: string
-    name*, title*: string
-    ga*: string
-    port*: int
+  PostError* = object
+    errorFields*: seq[string] ## IDs of the fields with an error.
+    message*: string # Error message
 
   ForumError* = object of CatchableError
     data*: PostError
 
-proc newForumError*(message: string,
-                   fields: seq[string] = @[]): ref ForumError =
-  new(result)
-  result.msg = message
-  result.data =
+proc newForumError*(message: string, fields: seq[string] = @[]): ref ForumError =
+  result[].msg = message
+  result[].data =
     PostError(
       errorFields: fields,
       message: message
