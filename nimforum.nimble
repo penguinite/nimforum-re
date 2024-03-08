@@ -10,14 +10,14 @@ skipExt = @["nim"]
 
 # Dependencies
 
-requires "nim >= 1.0.6"
+requires "nim >= 2.0.0"
 requires "httpbeast >= 0.4.0"
 requires "bcrypt"
 requires "hmac"
 requires "recaptcha"
 requires "sass"
 
-requires "happyx"
+requires "prologue"
 
 requires "iniplus >= 0.2.0"
 requires "webdriver"
@@ -25,7 +25,6 @@ requires "db_connector >= 0.1.0"
 requires "smtp >= 0.1.0"
 requires "checksums"
 
-# Tasks
 task run, "Runs the forum backend":
   exec "./src/forum"
 

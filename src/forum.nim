@@ -33,15 +33,13 @@ var
 let isFTSAvailable: bool = db.getAllRows(sql("SELECT name FROM sqlite_master WHERE " & "type='table' AND name='post_fts'")).len == 1
 
 proc init() =
-  ## Reloads every thread-local variable
+  ## Reloads every thread-local variable, meant to be executed every page visit.
   if config.isNil(): config = configs.init()
   if db.isNil(): db = database.init(config)
   if captcha.isNil() and config.hasCaptchaKeys(): captcha = captchawrap.init(config)
   if mailer.isNil(): mailer = newMailer(config)
 
 init() # Run at least once on startup.
-
-# --------------- HTML widgets ------------------------------------------------
 
 
 proc genThreadUrl(c: TForumData, postId = "", action = "",
@@ -733,8 +731,6 @@ routes:
 
   get "/categories.json":
     # TODO: Limit this query in the case of many many categories
-    
-
     resp $(%getCategories()), "application/json"
 
   get "/threads.json":

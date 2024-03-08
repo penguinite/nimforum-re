@@ -1,8 +1,6 @@
 import db_connector/db_sqlite
 from configs import Config
-
-proc init*(config: Config): DbConn =
-  return open(connection=config.dbPath, user="", password="", database="nimforum")
+from user import User
 
 type
   TCrud* {.deprecated: "use sqlCreate/sqlRead/sqlUpdate/sqlDelete".} = enum
@@ -50,3 +48,15 @@ proc crud*(operation: TCrud, table: string, data: varargs[string,`$`]): SqlQuery
   of crUpdate: return sqlUpdate(table, data)
   of crDelete: return sqlDelete(table)
   {.warning[Deprecated]: on.}
+
+proc init*(filename: string): DbConn =
+  return open(connection=filename, user="", password="", database="nimforum")
+
+proc init*(config: Config): DbConn =
+  return init(config.dbPath)
+
+proc setup*(dbFilename: string) =
+  
+
+
+proc addUser*(user: User)

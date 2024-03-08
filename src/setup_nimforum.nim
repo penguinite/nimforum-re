@@ -237,47 +237,6 @@ proc initialiseDb(admin: tuple[username, password, email: string],
 
   close(db)
 
-proc initialiseConfig(
-  name, title, hostname: string,
-  recaptcha: tuple[siteKey, secretKey: string],
-  smtp: tuple[address, user, password, fromAddr: string, tls: bool],
-  isDev: bool,
-  dbPath: string,
-  ga: string=""
-) =
-  let path = getCurrentDir() / "forum.ini"
-
-  var table = newConfigTable()
-
-  # Still quite ugly. We need a load of `condense` everywhere.
-  # Ill redo this once I learn macros. But hey! We don't need % anymore!
-  # And we don't need JSON too!
-  table.setBulkKeys(
-    c("", "isDev", isDev),
-    c("", "dbPath", dbPath),
-    c("web", "name", name),
-    c("web", "title", title),
-    c("web", "hostname", hostname),
-    c("captcha", "siteKey", recaptcha.siteKey),
-    c("captcha", "secretKey", recaptcha.secretKey),
-    c("smtp", "address", smtp.address),
-    c("smtp", "user", smtp.user),
-    c("smtp", "password", smtp.password),
-    c("smtp", "fromAddr", smtp.fromAddr),
-    c("smtp", "tls", smtp.tls)
-  )
-
-  if ga.len > 0:
-    table.setKey("web","ga", newValue(ga))
-
-  backup(path, some(toString(table)))
-  writeFile(path, toString(table))
-
-proc question(q: string): string =
-  while result.len == 0:
-    stdout.write(q)
-    result = stdin.readLine()
-
 proc setup() =
   echo("""
 Welcome to the NimForum setup script. Please answer the following questions.
@@ -345,24 +304,9 @@ when isMainModule:
   if paramCount() > 0:
     case paramStr(1)
     of "--dev":
-      let dbPath = "nimforum-dev.db"
-      echo("Initialising nimforum for development...")
-      initialiseConfig(
-        "Development Forum",
-        "Development Forum",
-        "localhost",
-        recaptcha=("", ""),
-        smtp=("", "", "", "", false),
-        isDev=true,
-        dbPath
-      )
-
-      initialiseDb(
-        admin=("admin", "admin", "admin@localhost.local"),
-        dbPath
-      )
+  
     of "--test":
-      let dbPath = "nimforum-test.db"
+      
       echo("Initialising nimforum for testing...")
       initialiseConfig(
         "Test Forum",
@@ -374,17 +318,11 @@ when isMainModule:
         dbPath
       )
 
-      initialiseDb(
-        admin=("admin", "admin", "admin@localhost.local"),
-        dbPath
-      )
+      
     of "--blank":
-      let dbPath = "nimforum-blank.db"
+      
       echo("Initialising blank DB...")
-      initialiseDb(
-        admin=("", "", ""),
-        dbPath
-      )
+      
     of "--setup":
       setup()
     else:
