@@ -56,7 +56,7 @@ proc init*(filename: string = getCurrentDir() / "forum.ini"): Config =
 
 proc isNil*(table: Config): bool = return not table.parsed
   
-proc initialiseConfig(
+proc initialiseConfig*(
   name, title, hostname: string,
   recaptcha: tuple[siteKey, secretKey: string],
   smtp: tuple[address, user, password, fromAddr: string, tls: bool],
@@ -89,5 +89,4 @@ proc initialiseConfig(
   if ga.len > 0:
     table.setKey("web","ga", newValue(ga))
 
-  backup(path, some(toString(table)))
   writeFile(path, toString(table))

@@ -1,4 +1,4 @@
-import std/[sysrand]
+import std/[sysrand, base64]
 import bcrypt, hmac
 
 proc genSalt(length: int): string =
@@ -16,6 +16,14 @@ proc makeSalt*(length: int = 128): string =
   for i in 0 ..< tmp.len:
     if tmp[i] != '\0':
       result.add tmp[i]
+  return result
+
+proc makeId*(length: int = 16): string =
+  ## Generates an ID that is safe for inclusion in the database.
+  for bite in urandom(length + 5):
+    result.add encode($(bite), true)
+    if result.len() >= length:
+      break
   return result
 
 proc makeSessionKey*(): string =

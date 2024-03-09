@@ -1,11 +1,6 @@
 import std/[strutils, xmltree, strtabs, htmlparser, streams, parseutils, logging]
 import rst, rstgen
 
-# Used to be:
-# {'A'..'Z', 'a'..'z', '0'..'9', '_', '\128'..'\255'}
-let
-  UsernameIdent* = IdentChars + {'-'} # TODO: Double check that everyone follows this.
-
 export parseInt
 
 type
