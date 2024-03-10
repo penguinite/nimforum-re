@@ -2,13 +2,30 @@ import std/[strutils, tables]
 import core/[configs, database, user, auth]
 
 ## This module contains procedures used by nimforumctl
-proc question*(q: string, default: string = ""): string =
-  echo q
+proc question*(question: string): string =
+  stdout.write question, ": "
+  return stdin.readLine()
+
+proc question*(question: string, default: string): string =
+  stdout.write question, " [", default, "]: "
   result = stdin.readLine()
-  if result.len() == 0 and default.len() > 0:
+  if result == "":
     return default
   else:
     return result
+
+proc questionBool*(question: string): bool =
+  stdout.write question, ": "
+  return stdin.readLine().parseBool()
+
+proc questionBool*(question: string, default: bool): bool =
+  stdout.write question, " [", default, "]: "
+  let tmp = stdin.readLine()
+  if tmp == "":
+    return default
+  else:
+    return tmp.parseBool()
+
 
 proc genCommand*(name, desc: string): string =
   var spaces = ""
