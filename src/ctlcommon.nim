@@ -97,7 +97,14 @@ proc setupDevMode*() =
   echo "Adding an admin user"
   let password = makeId(64)
   if db.createUser(newUser("admin", password, "admin@localhost.local", Admin)):
+    echo "Username: \"a  echo "Adding an admin user"
+  let password = makeId(64)
+  if db.createUser(newUser("admin", password, "admin@localhost.local", Admin)):
     echo "Username: \"admin\""
+    echo "Email: \"admin@localhost.local\""
+    echo "Password: \"", password, "\""
+  else:
+    echo "Failed to create user."dmin\""
     echo "Email: \"admin@localhost.local\""
     echo "Password: \"", password, "\""
   else:
@@ -111,45 +118,80 @@ Welcome to the NimForum setup script. Please answer the following questions.
 These can be changed later in the generated forum.ini file.
   """)
 
-  let name = question("Forum full name[fx. \"Nim forum\"]: ", "Nim forum")
-  let title = question("Forum short name[]: ")
+  let
+    name = question("Forum full name", "Nim forum")
+    title = question("Forum short name", "Nim forum")
+    hostname = question("Forum hostname", "forum.nim-lang.org")
+    
+  echo """
+nimforum-re supports recaptcha as an optional feature.
+If you would like to enable recaptcha then answer yes
+"""
+  var
+    recaptchaSiteKey, recaptchaSecretKey = ""
+    recaptchaEnabled = false
+  if questionBool("Enable recaptcha?", false):
+    echo("\nThe following question are related to recaptcha.")
+    echo("You must setup recaptcha v2 for your forum (Here: https://www.google.com/recaptcha/admin)")
+    echo("And then supply the site key and secret key, please do so now before answering.")
+    recaptchaSiteKey = question("Recaptcha site key: ")
+    recaptchaSecretKey = question("Recaptcha secret key: ")
+    recaptchaEnabled = true
 
-  let hostname = question("Forum hostname: ")
 
-  let adminUser = question("Admin username: ")
-  let adminEmail = question("Admin email: ")
+  echo """
+nimforum-re supports sending email via SMTP for email verification.
+If you'd like to enable that then answer yes to this question
+and be prepared to fill out the rest of the SMTP details.
+"""
 
-  echo("")
-  echo("The following question are related to recaptcha. \nYou must set up a " &
-       "recaptcha v2 for your forum before answering them. \nPlease do so now " &
-       "and then answer these questions: https://www.google.com/recaptcha/admin")
-  let recaptchaSiteKey = question("Recaptcha site key: ")
-  let recaptchaSecretKey = question("Recaptcha secret key: ")
+  var
+    smtpAddress, smtpUser, smtpPassword, smtpFromAddr = ""
+    smtpTls, smtpEnabled = false
+  if questionBool("Enable smtp?", false):
+    smtpAddress = question("SMTP address", "mail.hostname.com")
+    smtpUser = question("SMTP user")
+    smtpPassword = question("SMTP password")
+    smtpFromAddr = question("SMTP email sender address", "mail@mail.hostname.com")
+    smtpTls = questionBool("Enable TLS for SMTP", true)
+    smtpEnabled = true
 
+  echo """
+nimforum-re supports Google Analytics for collecting data, this is an optional feature.
+Please beware of any legal considerations when adding Google Analytics to your forum.
+You will have to add a clause in your privacy policy if you decide to add this.
+  """
+  
+  var
+    analyticsEnabled = false
+    analyticsID = ""
+  if questionBool("Enable Google Analytics for your forum?", false):
+    analyticsID = question("Google Analytics ID (e.g UA-12345678-1)")
+    analyticsEnabled = true
 
-  echo("The following questions are related to smtp. You must set up a \n" &
-       "mailing server for your forum or use an external service.")
-  let smtpAddress = question("SMTP address (eg: mail.hostname.com): ")
-  let smtpUser = question("SMTP user: ")
-  let smtpPassword = question()
-  let smtpFromAddr = question("SMTP sending email address (eg: mail@mail.hostname.com): ")
-  let smtpTls = parseBool(question("Enable TLS for SMTP: "))
-
-  echo("The following is optional. You can specify your Google Analytics ID " &
-       "if you wish. Otherwise just leave it blank.")
-  stdout.write("Google Analytics (eg: UA-12345678-1): ")
-  let ga = stdin.readLine().strip()
-
-  let dbPath = "nimforum.db"
+  let dbPath = question("Database path", "nimforum.db")
   initialiseConfig(
-    name, title, hostname, (recaptchaSiteKey, recaptchaSecretKey),
-    (smtpAddress, smtpUser, smtpPassword, smtpFromAddr, smtpTls), isDev=false,
-    dbPath, ga
+    name, title, hostname, (recaptchaSiteKey, recaptchaSecretKey, recaptchaEnabled),
+    (smtpAddress, smtpUser, smtpPassword, smtpFromAddr, smtpTls, smtpEnabled), isDev=false,
+    dbPath, (analyticsID, analyticsEnabled)
   )
 
-  initialiseDb(
-    admin=(adminUser, adminPass, adminEmail),
-    dbPath
-  )
+  var db = setup(dbPath)
+
+  echo "Would you like to add an administrator account?"
+  echo "You can always add one later if you'd like"
+  if questionBool("Add admin account", true):
+    let
+      password = makeId(64)
+      adminUser = question("Admin username", "admin")
+      adminEmail = question("Admin email")
+    
+    echo "Adding an admin user"
+    if db.createUser(newUser(adminUser,password,adminEmail,Admin)):
+      echo "Username: \"", adminUser, "\""
+      echo "Email: \"", adminEmail, "\""
+      echo "Password: \"", password, "\""
+    else:
+      echo "Failed to create user."
 
   echo("Setup complete!")

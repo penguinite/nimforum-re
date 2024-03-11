@@ -41,7 +41,7 @@ of "setup", "--setup":
     quit(0)
 
   # Finally, do the real, friendly setup procedure.
-
+  friendlySetup()
 of "--dev","--test": setupDevMode()
 of "--blank": discard database.setup("nimforum-blank.db")
 else:

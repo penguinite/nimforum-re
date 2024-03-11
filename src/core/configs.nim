@@ -4,7 +4,7 @@ import iniplus
 type
   Config* = object
     parsed: bool # This exists only for one reason: To check if the config data has actually been parsed into the object.
-    smtpTls*, smtpSsl*, isDev*: bool
+    recaptchaEnabled*, analyticsEnabled*, smtpEnabled*, smtpTls*, smtpSsl*, isDev*: bool
     smtpAddress*, smtpUser*, smtpPassword*, mlistAddress*, smtpFromAddr*: string
     recaptchaSecretKey*, recaptchaSiteKey*, dbPath*, hostname*, name*, title*, ga*: string
     port*, smtpPort*: int
@@ -32,8 +32,19 @@ proc init*(filename: string = getCurrentDir() / "forum.ini"): Config =
   result.smtpSsl = false
   if config.exists("smtp","ssl"):
     result.smtpSsl = config.getBool("smtp","ssl")
-    
+  
+  if config.exists("smtp","enabled"):
+    result.smtpEnabled = config.getBool("smtp","enabled")
+  else:
+    result.smtpEnabled
+
   result.mlistAddress = config.getStringOrDefault("smtp","listAddress","")
+  
+  if config.exists("captcha","enabled"):
+    result.recaptchaEnabled = config.getBool("captcha","enabled")
+  else:
+    result.recaptchaEnabled = false
+
   result.recaptchaSecretKey = config.getStringOrDefault("captcha","secretKey","")
   result.recaptchaSiteKey = config.getStringOrDefault("captcha","siteKey","")
 
@@ -45,7 +56,12 @@ proc init*(filename: string = getCurrentDir() / "forum.ini"): Config =
   result.hostname = config.getStringOrDefault("web","hostname","")
   result.name = config.getStringOrDefault("web","name","")
   result.title = config.getStringOrDefault("web","title","")
-  result.ga = config.getStringOrDefault("web","ga","")
+
+  if config.exists("analytics","enabled"):
+    result.analyticsEnabled = config.getBool("analytics","enabled")
+  else:
+    result.analyticsEnabled = false
+  result.ga = config.getStringOrDefault("analytics","ga","")
 
   result.port = 5000
   if config.exists("web","port"):
@@ -58,11 +74,11 @@ proc isNil*(table: Config): bool = return not table.parsed
   
 proc initialiseConfig*(
   name, title, hostname: string,
-  recaptcha: tuple[siteKey, secretKey: string],
-  smtp: tuple[address, user, password, fromAddr: string, tls: bool],
+  recaptcha: tuple[siteKey, secretKey: string, enabled: bool],
+  smtp: tuple[address, user, password, fromAddr: string, tls, enabled: bool],
   isDev: bool,
   dbPath: string,
-  ga: string=""
+  ga: tuple[ga_id: string, enabled: bool]
 ) =
   let path = getCurrentDir() / "forum.ini"
 
@@ -77,8 +93,10 @@ proc initialiseConfig*(
     c("web", "name", name),
     c("web", "title", title),
     c("web", "hostname", hostname),
+    c("captcha", "enabled", recaptcha.enabled)
     c("captcha", "siteKey", recaptcha.siteKey),
     c("captcha", "secretKey", recaptcha.secretKey),
+    c("smtp", "enabled", smtp.enabled),
     c("smtp", "address", smtp.address),
     c("smtp", "user", smtp.user),
     c("smtp", "password", smtp.password),
@@ -86,7 +104,7 @@ proc initialiseConfig*(
     c("smtp", "tls", smtp.tls)
   )
 
-  if ga.len > 0:
-    table.setKey("web","ga", newValue(ga))
+  if ga.enabled:
+    table.setKey("web","ga", newValue(ga.ga_id))
 
   writeFile(path, toString(table))
