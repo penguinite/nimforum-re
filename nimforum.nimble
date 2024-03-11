@@ -4,7 +4,8 @@ author        = "Dominik Picheta"
 description   = "The Nim forum"
 license       = "MIT"
 srcDir = "src"
-bin = @["forum"]
+binDir = "build"
+bin = @["nimforum","nimforumctl"]
 
 skipExt = @["nim"]
 

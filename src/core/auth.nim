@@ -3,28 +3,25 @@ import bcrypt, hmac
 
 proc genSalt(length: int): string =
   ## Wraps sysrand's urandom func.
-  for bite in urandom(length):
-    result.add $(bite)
+  var tmp = ""
+  tmp.add encode(urandom(length), true)
+  for ch in tmp:
+    result.add(ch)
+    if len(result) >= length:
+      break
   return result
 
-proc makeSalt*(length: int = 128): string =
+proc makeSalt*(length: int = 64): string =
   ## Creates a salt using a cryptographically secure random number generator.
   ##
   ## Ensures that the resulting salt contains no ``\0``.
-  var tmp = auth.genSalt(length)
-
-  for i in 0 ..< tmp.len:
-    if tmp[i] != '\0':
-      result.add tmp[i]
+  result = auth.genSalt(length)
+  echo result
   return result
 
 proc makeId*(length: int = 16): string =
   ## Generates an ID that is safe for inclusion in the database.
-  for bite in urandom(length + 5):
-    result.add encode($(bite), true)
-    if result.len() >= length:
-      break
-  return result
+  return makeSalt(length)
 
 proc makeSessionKey*(): string =
   ## Creates a random key to be used to authorize a session.

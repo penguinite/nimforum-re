@@ -12,6 +12,7 @@ nimcache/
 forum
 createdb
 editdb
+build/
 
 .vscode
 browsertester

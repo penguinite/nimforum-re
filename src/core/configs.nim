@@ -36,7 +36,7 @@ proc init*(filename: string = getCurrentDir() / "forum.ini"): Config =
   if config.exists("smtp","enabled"):
     result.smtpEnabled = config.getBool("smtp","enabled")
   else:
-    result.smtpEnabled
+    result.smtpEnabled = false
 
   result.mlistAddress = config.getStringOrDefault("smtp","listAddress","")
   
@@ -93,7 +93,7 @@ proc initialiseConfig*(
     c("web", "name", name),
     c("web", "title", title),
     c("web", "hostname", hostname),
-    c("captcha", "enabled", recaptcha.enabled)
+    c("captcha", "enabled", recaptcha.enabled),
     c("captcha", "siteKey", recaptcha.siteKey),
     c("captcha", "secretKey", recaptcha.secretKey),
     c("smtp", "enabled", smtp.enabled),

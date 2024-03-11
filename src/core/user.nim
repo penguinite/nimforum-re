@@ -106,26 +106,27 @@ proc validateEmail*(email: string): bool =
   return true # Everything should be good! sorta...
 
 proc isValid*(user: User): bool =
-  if isEmptyOrWhitespace(user.name) or
-     isEmptyOrWhitespace(user.email) or
-     isEmptyOrWhitespace(user.pass): return false
+  if isEmptyOrWhitespace(user[].name) or
+     isEmptyOrWhitespace(user[].email) or
+     isEmptyOrWhitespace(user[].pass): return false
   return true
 
 proc newUser*(name, pass, email: string, rank: UserRank): User =
   ## Note: This does not do any sanitzation, use sanitizeUser() or newUserSanitized()
-  result.name = name
-  result.pass = pass
-  result.email = email
-  result.rank = rank
-  result.id = makeId()
-  result.salt = makeSalt()
+  result = new(User)
+  result[].name = name
+  result[].pass = pass
+  result[].email = email
+  result[].rank = rank
+  result[].id = makeId()
+  result[].salt = makeSalt()
 
 proc sanitizeUser*(user: User): User = 
   result = user
-  result.name = sanitizeName(user.name)
-  result.email = sanitizeEmail(user.email)
-  result.pass = sanitizePass(user.pass)
-  return user
+  result[].name = sanitizeName(user.name)
+  result[].email = sanitizeEmail(user.email)
+  result[].pass = sanitizePass(user.pass)
+  return result
 
 proc newUserSanitized*(name, pass, email: string, rank: UserRank): User =
   return newUser(sanitizeName(name), sanitizeEmail(email), sanitizePass(pass), rank)

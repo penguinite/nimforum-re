@@ -39,7 +39,6 @@ proc sqlDelete*(table: string): SqlQuery =
 
 proc crud*(operation: TCrud, table: string, data: varargs[string,`$`]): SqlQuery
   {.deprecated: "use sqlCreate/sqlRead/sqlUpdate/sqlDelete".} =
-
   ## Converts crud or whatever into a SqlQuery.
   {.warning[Deprecated]: off.}
   case operation
@@ -65,9 +64,9 @@ proc userExistsName*(db: DbConn, name: string): bool =
     return true
   return false
 
-proc createUser*(db: DbConn, user: User): bool =
+proc createUserRaw*(db: DbConn, user: User): string =
   if not isValid(user):
-    return false
+    return "User isn't valid"
 
   let password = makePassword(user.pass, user.salt)
   var id = user.id
@@ -79,13 +78,18 @@ proc createUser*(db: DbConn, user: User): bool =
 
   try:
     db.exec(
-      sql"INSERT INTO person(id, name, password, email, salt, status, lastOnline) VALUES (?, ?, ?, ?, ?, DATETIME('now'));",
+      sql"INSERT INTO person(id, name, password, email, salt, status, lastOnline) VALUES (?, ?, ?, ?, ?, ?, DATETIME('now'));",
       id, user.name, password, user.email, user.salt, $user.rank
     )
-    return true
-  except:
-    return false
+    return ""
+  except CatchableError as err:
+    return err.msg
 
+proc createUser*(db: DbConn, user: User): bool =
+  if db.createUserRaw(user) == "":
+    return true
+  else:
+    return false
 
 proc userNameToId*(db: DbConn, name: string): string =
   ## Automatically sanitizes usernames.
@@ -213,7 +217,7 @@ proc setup*(filename: string = "nimforum.db"): DbConn =
   # -- Person
   result.createTable(
     "person",
-    "id varchar(64) primary key", # Difference: We use varchar(64) for ids not integer
+    "id varchar(64) primary key not null", # Difference: We use varchar(64) for ids not integer
     "name varchar(20) not null",
     "password varchar(300) not null",
     "email varchar(254) not null",

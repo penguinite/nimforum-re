@@ -29,11 +29,11 @@ proc questionBool*(question: string, default: bool): bool =
 
 proc genCommand*(name, desc: string): string =
   var spaces = ""
-  for i in 0..80 - len(name):
+  for i in 0..20 - len(name):
     spaces.add(" ")
   return "$#$#-- $#" % [name, spaces, desc]
   
-const helpPrompt* = @[
+const helpPromptA = @[
   "nimforumctl",
   "",
   "Commands:",
@@ -44,11 +44,14 @@ const helpPrompt* = @[
   "",
   "Please do not use the following commands, they are only here for backwards compatability with the old setup_nimforum commands.",
   "Legacy Commands:",
-  genCommand("--dev", "Does the same thing as the devSetup command"),
-  genCommand("--blank", "Creates a completely blank setup"),
+  genCommand("--dev", "Creates a developmental setup"),
+  genCommand("--blank", "Creates a blank setup"),
   genCommand("--test", "Does the same thing as the --dev command"),
   genCommand("--setup", "Does the same thing as the setup command")
 ]
+
+proc helpPrompt*(): string = 
+  result = helpPromptA.join("\n")
 
 proc check*(table: Table[string, string], long, short: string): bool =
   ## Checks if a long or short key exists in a table.
@@ -63,10 +66,11 @@ proc setupDevMode*() =
     "Development Forum",
     "Development Forum",
     "localhost",
-    recaptcha=("", ""),
-    smtp=("", "", "", "", false),
+    recaptcha=("", "", false),
+    smtp=("", "", "", "", false, false),
     isDev=true,
-    "nimforum-dev.db"
+    "nimforum-dev.db",
+    ga = ("", false)
   )
 
   echo "Initializing database"
@@ -95,20 +99,15 @@ proc setupDevMode*() =
 
 
   echo "Adding an admin user"
-  let password = makeId(64)
-  if db.createUser(newUser("admin", password, "admin@localhost.local", Admin)):
-    echo "Username: \"a  echo "Adding an admin user"
-  let password = makeId(64)
-  if db.createUser(newUser("admin", password, "admin@localhost.local", Admin)):
+  let
+    password = makeId(64)
+    result = db.createUserRaw(newUser("admin", password, "admin@localhost.local", Admin))
+  if result  == "":
     echo "Username: \"admin\""
     echo "Email: \"admin@localhost.local\""
     echo "Password: \"", password, "\""
   else:
-    echo "Failed to create user."dmin\""
-    echo "Email: \"admin@localhost.local\""
-    echo "Password: \"", password, "\""
-  else:
-    echo "Failed to create user."
+    echo "Failed to create user: ", result
   
   echo "Development forum setup complete!"
 
@@ -187,11 +186,12 @@ You will have to add a clause in your privacy policy if you decide to add this.
       adminEmail = question("Admin email")
     
     echo "Adding an admin user"
-    if db.createUser(newUser(adminUser,password,adminEmail,Admin)):
+    let result = db.createUserRaw(newUser(adminUser,password,adminEmail,Admin))
+    if result == "":
       echo "Username: \"", adminUser, "\""
       echo "Email: \"", adminEmail, "\""
       echo "Password: \"", password, "\""
     else:
-      echo "Failed to create user."
+      echo "Failed to create user: ", result
 
   echo("Setup complete!")
