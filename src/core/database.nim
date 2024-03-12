@@ -320,3 +320,7 @@ proc setup*(filename: string = "nimforum.db"): DbConn =
     """, [])
 
   return result
+
+proc isFTSEnabled*(db: DbConn): bool =
+  # A replacement for isFTSAvailable
+  return db.getAllRows(sql("SELECT name FROM sqlite_master WHERE " & "type='table' AND name='post_fts'")).len == 1

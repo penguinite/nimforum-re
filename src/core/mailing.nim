@@ -37,7 +37,6 @@ proc sendMail*(
   # Ensure we aren't emailing this address too much.
   if rateCheck(mailer, recipient):
     let msg = "Too many messages have been sent to this email address recently."
-    raise newForumError(msg)
 
   if config.smtpAddress.len == 0:
     warn("Cannot send mail: no smtp server configured (smtpAddress).")
@@ -47,24 +46,24 @@ proc sendMail*(
     return
 
   var client: AsyncSmtp
-  if mailer.config.smtpTls:
+  if config.smtpTls:
     client = newAsyncSmtp(useSsl=false)
-    await client.connect(mailer.config.smtpAddress, Port(mailer.config.smtpPort))
+    await client.connect(config.smtpAddress, Port(config.smtpPort))
     await client.startTls()
-  elif mailer.config.smtpSsl:
+  elif config.smtpSsl:
     client = newAsyncSmtp(useSsl=true)
-    await client.connect(mailer.config.smtpAddress, Port(mailer.config.smtpPort))
+    await client.connect(config.smtpAddress, Port(config.smtpPort))
   else:
     client = newAsyncSmtp(useSsl=false)
-    await client.connect(mailer.config.smtpAddress, Port(mailer.config.smtpPort))
+    await client.connect(config.smtpAddress, Port(config.smtpPort))
 
-  if mailer.config.smtpUser.len > 0:
-    await client.auth(mailer.config.smtpUser, mailer.config.smtpPassword)
+  if config.smtpUser.len > 0:
+    await client.auth(config.smtpUser, config.smtpPassword)
 
   let toList = @[recipient]
 
   var headers = otherHeaders
-  headers.add(("From", mailer.config.smtpFromAddr))
+  headers.add(("From", config.smtpFromAddr))
 
   let dateHeader = now().utc().format("ddd, dd MMM yyyy hh:mm:ss") & " +0000"
   headers.add(("Date", dateHeader))
@@ -72,9 +71,9 @@ proc sendMail*(
   let encoded = createMessage(subject, message,
       toList, @[], headers)
 
-  await client.sendMail(mailer.config.smtpFromAddr, toList, $encoded)
+  await client.sendMail(config.smtpFromAddr, toList, $encoded)
 
-proc sendPassReset(mailer: Mailer, email, user, resetUrl: string) {.async.} =
+proc sendPassReset(config: Config, mailer: Mailer, email, user, resetUrl: string) {.async.} =
   let message = """Hello $1,
 A password reset has been requested for your account on the $3.
 
@@ -87,13 +86,13 @@ If you do actually want to reset your password, visit this link:
   $2
 
 Thank you for being a part of our community!
-""" % [user, resetUrl, mailer.config.name]
+""" % [user, resetUrl, config.name]
 
-  let subject = mailer.config.name & " Password Recovery"
-  await sendMail(mailer, subject, message, email)
+  let subject = config.name & " Password Recovery"
+  await sendMail(config, mailer, subject, message, email)
 
 proc sendEmailActivation(
-  mailer: Mailer,
+  config: Config, mailer: Mailer,
   email, user, activateUrl: string
 ) {.async.} =
   let message = """Hello $1,
@@ -105,16 +104,16 @@ via the following link:
   $2
 
 Thank you for registering and becoming a part of our community!
-""" % [user, activateUrl, mailer.config.name]
-  let subject = mailer.config.name & " Account Email Confirmation"
-  await sendMail(mailer, subject, message, email)
+""" % [user, activateUrl, config.name]
+  let subject = config.name & " Account Email Confirmation"
+  await sendMail(config, mailer, subject, message, email)
 
 type
   SecureEmailKind* = enum
     ActivateEmail, ResetPassword
 
 proc sendSecureEmail*(
-  mailer: Mailer,
+  config: Config, mailer: Mailer,
   kind: SecureEmailKind,
   hostname, name, password, email, salt: string
 ) {.async.} =
@@ -141,13 +140,13 @@ proc sendSecureEmail*(
   let emailSentFut =
     case kind
     of ActivateEmail:
-      sendEmailActivation(mailer, email, name, url)
+      sendEmailActivation(config, mailer, email, name, url)
     of ResetPassword:
-      sendPassReset(mailer, email, name, url)
+      sendPassReset(config, mailer, email, name, url)
   yield emailSentFut
   if emailSentFut.failed:
     warn("Couldn't send email: ", emailSentFut.error.msg)
-    if emailSentFut.error of ForumError:
-      raise emailSentFut.error
-    else:
-      raise newForumError("Couldn't send email", @["email"])
+    #if emailSentFut.error of ForumError:
+    #  raise emailSentFut.error
+    #else:
+    #  raise newForumError("Couldn't send email", @["email"])

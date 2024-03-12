@@ -2,6 +2,7 @@ import std/[sysrand, base64]
 import bcrypt, hmac
 
 proc genSalt(length: int): string =
+  ## Creates a salt using a cryptographically secure random number generator.
   ## Wraps sysrand's urandom func.
   var tmp = ""
   tmp.add encode(urandom(length), true)
@@ -11,17 +12,9 @@ proc genSalt(length: int): string =
       break
   return result
 
-proc makeSalt*(length: int = 64): string =
-  ## Creates a salt using a cryptographically secure random number generator.
-  ##
-  ## Ensures that the resulting salt contains no ``\0``.
-  result = auth.genSalt(length)
-  echo result
-  return result
-
-proc makeId*(length: int = 16): string =
-  ## Generates an ID that is safe for inclusion in the database.
-  return makeSalt(length)
+# TODO: Get rid of these two.
+proc makeSalt*(length: int = 64): string = return auth.genSalt(length)
+proc makeId*(length: int = 16): string = return makeSalt(length)
 
 proc makeSessionKey*(): string =
   ## Creates a random key to be used to authorize a session.
