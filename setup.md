@@ -1,30 +1,28 @@
 # NimForum setup
 
-This document describes the steps needed to setup a working NimForum instance.
+This document describes the steps needed to setup a working nimforum-re instance on a Linux machine.
 
 ## Requirements
 
-* Ubuntu 16.04+
+* Any up-to-date or modern Linux distro
 * Some Linux knowledge
 
 ## Installation
 
-Begin by downloading the latest NimForum release from
-[here](https://github.com/nim-lang/nimforum/releases). The macOS releases are
-mainly provided for testing.
+Begin by downloading the latest nimforum-re release from [here](https://github.com/penguinite/nimforum-re/releases)
 
-Extract the downloaded tarball on your server. These steps can be done using
-the following commands:
+Extract the downloaded tarball on your server.
+These steps can be done using the following commands:
 
 ```
-wget https://github.com/nim-lang/nimforum/releases/download/v2.0.0/nimforum_2.0.0_linux.tar.xz
-tar -xf nimforum_2.0.0_linux.tar.xz
+wget https://github.com/penguinite/nimforum-re/releases/download/latest/nimforum-re_linux_amd64.zip
+unzip nimforum-re_linux_amd64.zip
 ```
 
 Then ``cd`` into the forum's directory:
 
 ```
-cd nimforum_2.0.0_linux
+cd nimforum-re
 ```
 
 ### Dependencies
@@ -37,46 +35,41 @@ sudo apt install libsass-dev sqlite3
 
 ## Configuration and DB creation
 
-The NimForum release comes with a handy ``setup_nimforum`` program. Run
-it to begin the setup process:
+nimforum-re releases come with a hand `nimforumctl` program, which is useful for general server maintenance.
+In our case, we will be using it to start the setup process.
 
 ```
-./setup_nimforum --setup
+./nimforumctl setup
 ```
 
-The program will ask you multiple questions which will require some
-additional setup, including mail server info and recaptcha keys. You can
-just specify dummy values if you want to play around with the forum as
-quickly as possible and set these up later.
+And now, nimforumctl will ask you multiple questions to help you setup the server.
+it will create a database setup and a config file for you, and if you are unsure of what to pick, then don't worry!
+Most of the values can be changed later (either via the config file or the database)
 
-This program will create a ``nimforum.db`` file, this contains your forum's
-database. It will also create a ``forum.ini`` file, you can modify this
-file after running the ``setup_nimforum`` script if you've made any mistakes
-or just want to change things.
+This program will create a `nimforum-re.db` file, this contains your forum's database.
+It will also create a `forum.ini` file,
+you can modify this file after running the `nimforumctl` script if you've made any mistakes or just want to change things.
 
 ## Running the forum
 
-Executing the forum is simple, just run the ``forum`` binary:
+Executing the forum is simple, just run the ``nimforum`` binary:
 
 ```
-./forum
+./nimforum
 ```
 
-The forum will start listening to HTTP requests on port 5000 (by default, this
-can be changed in ``forum.ini``).
+The forum will start listening to HTTP requests on port 5000
+(by default, this can be changed in ``forum.ini``).
 
-On your server you should set up a separate HTTP server. The recommended choice
-is nginx. You can then use it as a reverse proxy for NimForum.
+On your server you should set up a separate HTTP server.
+The recommended choice is nginx.
+You can then use it as a reverse proxy for NimForum.
 
 ### HTTP server
 
 #### nginx
 
-Once you have nginx installed on your server, you will need to configure it.
-Create a ``forum.hostname.com`` file (replace the hostname with your forum's
-hostname) inside ``/etc/nginx/sites-available/``.
-
-Place the following inside it:
+You can use the following nginx configuration:
 
 ```
 server {
@@ -91,23 +84,13 @@ server {
 }
 ```
 
-Again, be sure to replace ``forum.hostname.com`` with your forum's
-hostname.
-
-You should then create a symlink to this file inside ``/etc/nginx/sites-enabled/``:
-
-```
-ln -s /etc/nginx/sites-available/<forum.hostname.com> /etc/nginx/sites-enabled/<forum.hostname.com>
-```
-
-Then reload nginx configuration by running ``sudo nginx -s reload``.
+Be sure to replace ``forum.hostname.com`` with your forum's hostname.
 
 ### Supervisor
 
-#### systemd
+Supervisors can start up nimforum when the server boots, which means that if you configure your service manager right then nimforum can be automatically started whenever the system reboots or shuts down.
 
-In order to ensure the forum is always running, even after a crash or a server
-reboot, you should create a systemd service file.
+#### systemd
 
 Create a new file called ``nimforum.service`` inside ``/lib/systemd/system/nimforum.service``.
 
@@ -121,8 +104,8 @@ Wants=network-online.target
 
 [Service]
 Type=simple
-WorkingDirectory=/home/<user>/nimforum-2.0.0/ # MODIFY THIS
-ExecStart=/usr/bin/stdbuf -oL /home/<user>/nimforum-2.0.0/forum # MODIFY THIS
+WorkingDirectory=/home/<user>/nimforum-re/ # MODIFY THIS
+ExecStart=/usr/bin/stdbuf -oL /home/<user>/nimforum-re/nimforum # MODIFY THIS
 # Restart when crashes.
 Restart=always
 RestartSec=1

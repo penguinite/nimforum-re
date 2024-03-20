@@ -1,7 +1,7 @@
 # Package
 version       = "2.3.0"
 author        = "Dominik Picheta"
-description   = "The Nim forum"
+description   = "The Nim forum (re-written, to be better.)"
 license       = "MIT"
 srcDir = "src"
 binDir = "build"
@@ -12,41 +12,33 @@ skipExt = @["nim"]
 # Dependencies
 
 requires "nim >= 2.0.0"
-requires "httpbeast >= 0.4.0"
 requires "bcrypt"
 requires "hmac"
 requires "recaptcha"
-requires "sass"
 
 requires "prologue"
 
 requires "iniplus >= 0.2.0"
-requires "webdriver"
 requires "db_connector >= 0.1.0"
 requires "smtp >= 0.1.0"
 requires "checksums"
 
-task run, "Runs the forum backend":
-  exec "./src/forum"
+before build:
+  if dirExists("build"):
+    rmDir("build")
 
-task testbackend, "Runs the forum backend in test mode":
-  exec "nimble c -r -d:skipRateLimitCheck src/forum.nim"
-
-task testdb, "Creates a test DB (with admin account!)":
-  exec "nimble c src/setup_nimforum"
-  exec "./src/setup_nimforum --test"
+proc checkForBuild() =
+  if not dirExists("build"):
+    exec "nimble build"
 
 task devdb, "Creates a test DB (with admin account!)":
-  exec "nimble c src/setup_nimforum"
-  exec "./src/setup_nimforum --dev"
+  checkForBuild()
+  exec "./build/nimforumctl setup -d"
 
 task blankdb, "Creates a blank DB":
-  exec "nimble c src/setup_nimforum"
-  exec "./src/setup_nimforum --blank"
+  checkForBuild()
+  exec "./build/nimforumctl setup -b"
 
-task test, "Runs tester":
-  exec "nimble c -y --mm:refc src/forum.nim"
-  exec "nimble c -y -r -d:actionDelayMs=0 tests/browsertester"
-
-task fasttest, "Runs tester without recompiling backend":
-  exec "nimble c -r -d:actionDelayMs=0 tests/browsertester"
+task backend, "Runs the backend":
+  checkForBuild()
+  exec "./build/nimforum"
