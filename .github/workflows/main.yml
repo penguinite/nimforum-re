@@ -1,72 +1,17 @@
-# This is a basic workflow to help you get started with Actions
-
 name: CI
-
-# Controls when the action will run.
 on:
   push:
-  pull_request:
-    branches: [master]
-  schedule:
-    - cron: '0 0 * * 1'
+    tags:
+      - '*.*.*'
+env:
+  nim-version: 'stable'
 
-# A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  test_stable_and_devel:
+  test:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        chrome: [ 'stable' ]
-        nim-version: ['stable', 'devel']
-        include:
-          - cache-key: 'stable'
     steps:
-      - uses: actions/checkout@v4
-      - name: Checkout submodules
-        run: git submodule update --init --recursive
-
-      - name: Setup Chrome
-        uses: browser-actions/setup-chrome@latest
+      - uses: actions/checkout@v3
+      - uses: jiro4989/setup-nim-action@v1
         with:
-          chrome-version: ${{ matrix.chrome }}
-
-      - name: Get Date
-        id: get-date
-        run: echo "::set-output name=date::$(date "+%Y-%m-%d")"
-        shell: bash
-
-      - name: Cache choosenim
-        uses: actions/cache@v4
-        with:
-          path: ~/.choosenim
-          key: ${{ runner.os }}-choosenim-${{ matrix.cache-key }}
-
-      - name: Cache nimble
-        uses: actions/cache@v4
-        with:
-          path: ~/.nimble
-          key: ${{ runner.os }}-nimble-${{ hashFiles('*.nimble') }}
-
-      - name: Install geckodriver
-        run: |
-          sudo apt-get -qq update
-          sudo apt-get install autoconf libtool libsass-dev
-          wget https://github.com/mozilla/geckodriver/releases/download/v0.32.0/geckodriver-v0.32.0-linux64.tar.gz
-          mkdir geckodriver
-          tar -xzf geckodriver-v0.32.0-linux64.tar.gz -C geckodriver
-          export PATH=$PATH:$PWD/geckodriver
-
-      - name: Install choosenim
-        run: |
-          export CHOOSENIM_CHOOSE_VERSION="${{ matrix.nim-version }}"
-          curl https://nim-lang.org/choosenim/init.sh -sSf > init.sh
-          sh init.sh -y
-          export PATH=$HOME/.nimble/bin:$PATH
-          nimble refresh -y
-
-      - name: Run tests
-        run: |
-          export PATH=$HOME/.nimble/bin:$PATH
-          export MOZ_HEADLESS=1
-          nimble -y --mm:refc install
-          nimble -y test
+          nim-version: ${{ env.nim-version }}
+      - run: nimble test -Y
