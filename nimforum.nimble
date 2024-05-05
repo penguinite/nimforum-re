@@ -1,3 +1,4 @@
+
 # Package
 version       = "2.3.0"
 author        = "Dominik Picheta"
@@ -23,13 +24,17 @@ requires "db_connector >= 0.1.0"
 requires "smtp >= 0.1.0"
 requires "checksums"
 
-before build:
-  if dirExists("build"):
-    rmDir("build")
-
 proc checkForBuild() =
   if not dirExists("build"):
     exec "nimble build"
+
+task debug, "Creates a debug build":
+  for binary in bin:
+    exec "nimble build " & binary & " -d:debug --stackTrace:on --parallelBuild:0 --lineDir:on --lineTrace:on --checks:on --debuginfo:on --debugger:native"
+
+task release, "Creates a release build":
+  for binary in bin:
+    exec "nimble build " & binary & " -d:release -d:danger --checks:off --stackTrace:on --parallelBuild:0 --opt:speed"
 
 task devdb, "Creates a test DB (with admin account!)":
   checkForBuild()

@@ -4,21 +4,20 @@ import smtp
 import configs, auth
 
 type
-  Mailer* = ref object
+  Mailer* = object
     loaded: bool
     lastReset: Time
     emailsSent: CountTable[string]
 
 proc newMailer*(config: Config): Mailer =
-  Mailer(
-    loaded: true,
-    lastReset: getTime(),
-    emailsSent: initCountTable[string]()
-  )
+  result.loaded = true
+  result.lastReset = getTime()
+  result.emailsSent = initCountTable[string]()
 
-proc isNil*(m: Mailer): bool = return not m.loaded
+proc isNil*(m: Mailer): bool =
+  return not m.loaded
 
-proc rateCheck(mailer: Mailer, address: string): bool =
+proc rateCheck(mailer: var Mailer, address: string): bool =
   ## Returns true if we've emailed the address too much.
   let diff = getTime() - mailer.lastReset
   if diff.inHours >= 1:
@@ -30,19 +29,19 @@ proc rateCheck(mailer: Mailer, address: string): bool =
 
 proc sendMail*(
   config: Config,
-  mailer: Mailer,
+  mailer: var Mailer,
   subject, message, recipient: string,
   otherHeaders:seq[(string, string)] = @[]
 ) {.async.} =
   # Ensure we aren't emailing this address too much.
   if rateCheck(mailer, recipient):
-    let msg = "Too many messages have been sent to this email address recently."
+    warn "Too many messages have been sent to this email address recently: ", recipient
 
   if config.smtpAddress.len == 0:
-    warn("Cannot send mail: no smtp server configured (smtpAddress).")
+    warn "Cannot send mail: no smtp server configured (smtpAddress)."
     return
   if config.smtpFromAddr.len == 0:
-    warn("Cannot send mail: no smtp from address configured (smtpFromAddr).")
+    warn "Cannot send mail: no smtp from address configured (smtpFromAddr)." 
     return
 
   var client: AsyncSmtp
@@ -73,7 +72,7 @@ proc sendMail*(
 
   await client.sendMail(config.smtpFromAddr, toList, $encoded)
 
-proc sendPassReset(config: Config, mailer: Mailer, email, user, resetUrl: string) {.async.} =
+proc sendPassReset(config: Config, mailer: var Mailer, email, user, resetUrl: string) {.async.} =
   let message = """Hello $1,
 A password reset has been requested for your account on the $3.
 
@@ -92,7 +91,7 @@ Thank you for being a part of our community!
   await sendMail(config, mailer, subject, message, email)
 
 proc sendEmailActivation(
-  config: Config, mailer: Mailer,
+  config: Config, mailer: var Mailer,
   email, user, activateUrl: string
 ) {.async.} =
   let message = """Hello $1,
@@ -113,7 +112,7 @@ type
     ActivateEmail, ResetPassword
 
 proc sendSecureEmail*(
-  config: Config, mailer: Mailer,
+  config: Config, mailer: var Mailer,
   kind: SecureEmailKind,
   hostname, name, password, email, salt: string
 ) {.async.} =

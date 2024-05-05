@@ -2,10 +2,6 @@ import db_connector/db_sqlite
 import std/[os, strutils]
 import user, auth, categories, configs
 
-type
-  TCrud* {.deprecated: "use sqlCreate/sqlRead/sqlUpdate/sqlDelete".} = enum
-    crCreate, crRead, crUpdate, crDelete
-
 proc sqlCreate*(table: string, data: varargs[string,`$`]): SqlQuery =
   var
     fields = "INSERT INTO " & table & "("
@@ -37,6 +33,9 @@ proc sqlUpdate*(table: string, data: varargs[string,`$`]): SqlQuery =
 proc sqlDelete*(table: string): SqlQuery =
   return sql("DELETE FROM " & table & " WHERE id = ?;")
 
+type
+  TCrud* = enum
+    crCreate, crRead, crUpdate, crDelete
 proc crud*(operation: TCrud, table: string, data: varargs[string,`$`]): SqlQuery
   {.deprecated: "use sqlCreate/sqlRead/sqlUpdate/sqlDelete".} =
   ## Converts crud or whatever into a SqlQuery.
@@ -152,7 +151,9 @@ proc getCategories*(db: DbConn): seq[Category] =
         id: data[0], name: data[1], description: data[2], color: data[3],
         topicsCount: data[4].parseInt()))
   return result
-  
+
+proc getThreads*(db: DbConn, limit: int = 30): seq[Thread]
+
 proc createTable(db: DbConn, table: string, fields: varargs[string]) =
   var statement = "CREATE TABLE IF NOT EXISTS " & table & "("
   for field in fields:

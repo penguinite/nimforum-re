@@ -729,10 +729,6 @@ settings:
 
 routes:
 
-  get "/categories.json":
-    # TODO: Limit this query in the case of many many categories
-    resp $(%getCategories()), "application/json"
-
   get "/threads.json":
     var
       start = getInt(@"start", 0)

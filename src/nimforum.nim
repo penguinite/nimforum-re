@@ -20,9 +20,16 @@ proc init() =
 init() # Run at least once on startup.
 
 # Maybe move this into its own separate file when it gets too big
-proc getCategoriesRoute(ctx: Context) {.async.} =
-  resp "Hello World!"
+proc getCategoriesJson(ctx: Context) {.async.} =
+  ## Returns JSON containing the categories used for this forum
+  # TODO: Limit this query in the case of many many categories
+  init()
+  resp jsonResponse(%getCategories(db))
 
+proc getThreadsJson(ctx: Context) {.async.} =
+  ## Returns JSON containing the most recent threads.
+  #
+  init()
 
 let app = newApp(
   newSettings(
@@ -31,5 +38,8 @@ let app = newApp(
     appName = "nimforum"
   )
 )
-app.get("/categories.json", getCategoriesRoute)
+
+echo "Running on port ", config.port
+app.get("/categories.json", getCategoriesJson)
+app.get("/threads.json", getThreadsJson)
 app.run()
