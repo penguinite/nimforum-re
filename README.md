@@ -101,6 +101,7 @@ And you can access local NimForum site, open [http://localhost:5000](http://loca
 # Copyright
 
 Copyright (c) 2012-2018 Andreas Rumpf, Dominik Picheta. All Rights Reserved.
+
 Copyright (c) 2023-2024 penguinite <penguinite@tuta.io>
 
 nimforum-re is licensed under the MIT license.
