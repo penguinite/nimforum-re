@@ -28,7 +28,7 @@ And here is a list of every single feature we'd like to complete:
 * Every single nimforum feature. nimforum-re should be an extended version of nimforum, not a more limited one.
 * Custom avatar support whilst preserving gravatar
 * Support for libravatar (Including custom instances)
-* Image attachments (Either via [https://forum.nim-lang.org/t/8694#56729](S3) or flat files.)
+* Image attachments (Either via [S3](https://forum.nim-lang.org/t/8694#56729) or flat files.)
 
 Note that the above list is not a complete list, and some things might change as the fork evolves.
 
